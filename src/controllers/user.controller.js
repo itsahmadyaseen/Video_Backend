@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import { User } from "../models/user.model.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   /*Steps
@@ -21,7 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //all fields to be filled
   if (
-    [fileName, username, email, password].some((field) => {
+    [fullName, username, email, password].some((field) => {
       field?.trim === "";
     })
   ) {
@@ -29,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //check existing user
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ email, username }],
   });
 
@@ -47,7 +48,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
   if (!avatar) {
     throw new apiError(400, "Avatar file is required");
   }
