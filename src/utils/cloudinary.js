@@ -17,9 +17,23 @@ const uploadOnCloudinary = async (localFilePath) => {
     return response;
   } catch (error) {
     console.error("Error uploading file to Cloudinary:", error.message);
-    fs.unlinkSync(localFilePath); //remove file from local if error is found
+    fs.unlinkSync(localFilePath); //remove file from local if error is found 
     return null;
   }
 };
 
-export { uploadOnCloudinary };
+const deleteFile = async (publicid) => {
+  try {
+    if(!publicid){
+      return "public id not found"
+    }
+    const deleteResponse = await cloudinary.uploader.destroy(publicid, {
+      resource_type: "auto"
+    })
+    return deleteResponse;
+  } catch (error) {
+    return e.message
+  }
+}
+
+export { uploadOnCloudinary, deleteFile };
