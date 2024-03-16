@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
+//complete -CoverImage
 const registerUser = asyncHandler(async (req, res) => {
   /*Steps
         Get user details from frontend 
@@ -20,7 +21,8 @@ const registerUser = asyncHandler(async (req, res) => {
   */
 
   const { fullName, username, email, password } = req.body;
-  console.log("Email ", email);
+
+  console.log("REQ body ", req.body);
 
   //all fields to be filled
   if (
@@ -81,20 +83,26 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new apiResponse(200, createdUser, "User registered successfully"));
+    .json(new apiResponse(201, createdUser, "User registered Successfully"));
 });
 
+//complete
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = await user.generateAccessToken();
+    console.log(accessToken);
     const refreshToken = await user.generateRefreshToken();
+    console.log(refreshToken);
 
+
+    
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
+    console.error(error.message);
     throw new apiError(
       500,
       "Something went wrong while generating refresh and access token"
@@ -102,6 +110,7 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
+//Complete
 const loginUser = asyncHandler(async (req, res) => {
   /*steps
     req body - data
@@ -112,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
     send cookies
   */
 
-  const { email, password, username } = await req.body;
+  const { email, username, password } = req.body;
 
   if (!username || !email) {
     throw new apiError(400, "Username and email is required");
@@ -125,24 +134,26 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new apiError(404, "User does not exist");
   }
-
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new apiError(404, "User does not exist");
+  console.error("Invalid password provided:", password);
+    throw new apiError(401, "Invalid user credentials");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
 
+  console.log("Access TOKEN" ,accessToken);
+
   const loggedInUser = await User.findById(user._id).select(
-    "-passwod, -refreshToken"
+    "-password, -refreshToken"
   );
 
   const options = {
-    httpOnly: true,
-    secure: true,
+    httpOnly: false,
+    secure: false,
   };
 
   return res
@@ -162,7 +173,9 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+//complete
 const logoutUser = asyncHandler(async (req, res) => {
+  console.log(req.user._id);
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -179,6 +192,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
   };
+
   return res
     .status(200)
     .clearCookie("accessToken", options)
@@ -186,18 +200,20 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "User logged out"));
 });
 
+//complete
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
+
 
   if (!incomingRefreshToken) {
     throw new apiError(401, "Unauthorized Request");
   }
 
-  try {
+   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
-      process.env.ACCESS_TOKEN_SECRET
+      process.env.REFRESH_TOKEN_SECRET
     );
 
     const user = await User.findById(decodedToken?._id);
@@ -230,33 +246,43 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
+    console.error("Error verifying token: ", error);
     throw new apiError(401, error?.message || "Invalid refresh token");
   }
 });
 
+//complete
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
+  console.log(oldPassword);
+  console.log(newPassword);
+
   const user = await User.findById(req.user._id);
 
-  const isPasswordCorrect = await isPasswordCorrect(oldPassword);
+  
+  console.log("USER  ", user);
 
-  if (!isPasswordCorrect) {
+  const checkPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!checkPasswordCorrect) {
     throw new apiError(400, "Invalid old password");
   }
 
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
 
-  return res.status(200).json(200, {}, "Password changed successfully");
+  return res.status(200).json(new apiResponse(200, {newPassword}, "Password changed successfully"));
 });
 
+//complete
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new apiResponse(200, req.user, "User fetched successfully"));
 });
 
+//complete
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email } = req.body;
 
@@ -280,6 +306,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "Account details updated successfully"));
 });
 
+//complete
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
 
@@ -308,6 +335,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "Avatar updated successfully"));
 });
 
+//complete
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
 
@@ -472,5 +500,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelDetails,
-  getWatchHistory
+  getWatchHistory,
 };
