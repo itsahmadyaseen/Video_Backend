@@ -5,7 +5,7 @@ import {
   deleteComment,
   fetchComments,
   updateComment,
-} from "../controllers/comment.controller";
+} from "../controllers/comment.controller.js";
 
 const router = Router();
 router.use(verifyJwt);
