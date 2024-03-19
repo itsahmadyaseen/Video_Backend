@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { error } from "console";
 import fs from "fs";
 
 cloudinary.config({
@@ -11,29 +12,30 @@ const uploadOnCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
 
-    const response = await cloudinary.uploader.upload(localFilePath);
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
 
     console.log("File is uploaded successfull ", response.url);
     return response;
   } catch (error) {
     console.error("Error uploading file to Cloudinary:", error.message);
-    fs.unlinkSync(localFilePath); //remove file from local if error is found 
+    fs.unlinkSync(localFilePath); //remove file from local if error is found
     return null;
   }
 };
 
-const deleteFile = async (publicid) => {
+const deleteFile = async (publicId) => {
   try {
-    if(!publicid){
-      return "public id not found"
+    if (!publicId) {
+      throw new Error("Public ID not provided");
     }
-    const deleteResponse = await cloudinary.uploader.destroy(publicid, {
-      resource_type: "auto"
-    })
+    const deleteResponse = await cloudinary.uploader.destroy(publicId);
     return deleteResponse;
   } catch (error) {
-    return e.message
+    console.error(error);
+    return error.message;
   }
-}
+};
 
 export { uploadOnCloudinary, deleteFile };

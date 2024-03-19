@@ -15,7 +15,7 @@ const videoSchema = new Schema(
       type: String,
       required: true,
     },
-    desctiption: {
+    description: {
       type: String,
       required: true,
     },
@@ -26,6 +26,12 @@ const videoSchema = new Schema(
     views: {
       type: Number,
       default: 0,
+    },
+    cloudinaryVideoId:{
+      type:String
+    },
+    cloudinaryThumbnailId:{
+      type:String
     },
     isPublished: {
       type: Boolean,
