@@ -1,10 +1,14 @@
 import { Router } from "express";
+import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {
   createPlaylist,
   deletePlaylist,
   getPlaylistById,
   updatePlaylist,
-} from "../controllers/playlist.controller";
+  addVideoToPlaylist,
+  removeVideoFromPlaylist,
+  getUserPlaylists,
+} from "../controllers/playlist.controller.js";
 
 const router = Router();
 

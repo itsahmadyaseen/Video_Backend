@@ -95,6 +95,8 @@ const generateAccessAndRefreshToken = async (userId) => {
     const refreshToken = await user.generateRefreshToken();
     console.log(refreshToken);
 
+
+    
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -135,7 +137,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    console.error("Invalid password provided:", password);
+  console.error("Invalid password provided:", password);
     throw new apiError(401, "Invalid user credentials");
   }
 
@@ -143,7 +145,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
-  console.log("Access TOKEN", accessToken);
+  console.log("Access TOKEN" ,accessToken);
 
   const loggedInUser = await User.findById(user._id).select(
     "-password, -refreshToken"
@@ -203,11 +205,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
+
   if (!incomingRefreshToken) {
     throw new apiError(401, "Unauthorized Request");
   }
 
-  try {
+   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
@@ -254,8 +257,8 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
   const user = await User.findById(req.user?._id);
 
-  if (!user) {
-    throw new apiError(404, "Cannot find user");
+  if(!user){
+    throw new apiError(404, "Cannot find user")
   }
 
   const checkPasswordCorrect = await user.isPasswordCorrect(oldPassword);
@@ -267,11 +270,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
 
-  return res
-    .status(200)
-    .json(
-      new apiResponse(200, { newPassword }, "Password changed successfully")
-    );
+  return res.status(200).json(new apiResponse(200, {newPassword}, "Password changed successfully"));
 });
 
 //complete
